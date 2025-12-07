@@ -205,7 +205,7 @@ struct CLUSTER* GET_CLUSTER(char* PATH, char* END, char* filename) // hier noch 
 
     memcpy(dirname, last_slash + 1, current_slash  - (last_slash + 1));
     
-    // Entnehme den jeweiligen dir Eintrag aus dem root dir
+   
     struct DIR_ENTRY* entry = GET_ROOT_DIR_ENTRY(dirname);      
     struct CLUSTER* cluster = NULL;
 
@@ -362,87 +362,7 @@ void MKDIR(char* PATH)
     FAT_CLUSTER_OFFSET++;
 
     free(filename);
-    free(root_dir_name);    
-    /*
-    char* filename = GET_FILENAME(PATH);
-    char dirname[8];
-    memset(dirname, ' ', 8);
-
-    // Lese den Namen des root dirs aus
-    char* last_slash = PATH;
-    char* current_slash = PATH + 1;
-    for(current_slash; *current_slash != '/' && *current_slash; current_slash++)
-            ;
-
-    memcpy(dirname, last_slash + 1, current_slash  - (last_slash + 1));
-    
-
-    if(memcmp(filename, dirname, 8) == 0)
-    {
-        MKROOTDIR(dirname);
-        return;
-    }
-    
-
-    // Entnehme den jeweiligen dir Eintrag aus dem root dir
-    struct DIR_ENTRY* entry = GET_ROOT_DIR_ENTRY(dirname);      
-    struct CLUSTER* cluster;
-    
-    while(entry != NULL)
-    {
-        last_slash = current_slash;
-        current_slash += 1;
-        for(current_slash; *current_slash != '/' && *current_slash; current_slash++)
-            ;
-        memset(dirname, ' ', 8);
-        memcpy(dirname, last_slash + 1, current_slash  - (last_slash + 1));
-
-        cluster = &__DATA.CLUSTERS[entry->FIRST_CLUSTER];
-        entry = GET_DIR_ENTRY(dirname, cluster);
-    }
-
-    if(memcmp(dirname, filename, 8) != 0)
-    {
-        printf("Wrong Path : %s, terminated.", PATH);
-        exit(1);
-    }
-
-
-    struct DIR_ENTRY new_entry = {
-        .ATTRIBUTES = 0x10,
-        .RESERVED = 0x00,
-        .CREATION_TIME_IN_10THSEC = 0,
-        .CREATE_TIME = 0,
-        .CREATION_DATE = 0,
-        .LAST_ACCESS_DATE = 0,
-        .FAT32_HIGH_DATE = 0,
-        .LAST_WRITE_DATE = 0,
-        .LAST_WRITE_TIME = 0,
-        .FIRST_CLUSTER = FAT_CLUSTER_OFFSET,
-        .FILE_SIZE = 0
-    };
-
-    memcpy(new_entry.FILENAME, filename, 8);
-    memcpy(new_entry.END, "   ", 3);
-
-
-    uint8_t zeros[DIR_ENTRY_SIZE ];
-    memset(zeros, 0, DIR_ENTRY_SIZE );
-    for(int i = 0; i < CLUSTER_SIZE ; i += DIR_ENTRY_SIZE )
-    {
-        if(memcmp(&cluster->bytes[i], &zeros, DIR_ENTRY_SIZE) == 0)     
-        {
-            memcpy(&cluster->bytes[i], &new_entry, DIR_ENTRY_SIZE );
-            break;
-        }
-    }
-
-    
-    SET_FAT_ENTRY(FAT_CLUSTER_OFFSET,  0x0FFF);
-    FAT_CLUSTER_OFFSET++;
-    free(filename);    
-    
-    */    
+    free(root_dir_name);        
 }   
 
 void MKFILE(char* PATH, char* END, size_t size)
@@ -524,10 +444,8 @@ void WFILE(char* PATH, char* END, char* stream, size_t stream_size)
         
         
         memcpy(&__DATA.CLUSTERS[cluster_offset], buffer, buffer_size);
-        //printf("%d \n" ,__DATA.CLUSTERS[cluster_offset].bytes[0]);          // TODO:
 
-
-        cluster_offset = GET_FAT_ENTRY(cluster_offset); // TODO:
+        cluster_offset = GET_FAT_ENTRY(cluster_offset); 
     }
 
 }
