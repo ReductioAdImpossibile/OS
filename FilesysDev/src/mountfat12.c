@@ -8,18 +8,34 @@ This is not a driver. Its a program to create a img, which a driver will be base
 run with : ./mountfat12 --bootstage0 <file.bin> --bootstage1 <file.bin> --kernel <file.bin>
 ---------------------------------------------------------------------------------------------
 
-The resulting file will always be called disk.img.
-The bootstage0 file needs to be at least 448 Bytes big. If its bigger,
-the values of the Bytes 448 to 512 will be lost, due to the placement of the Bios Parameter Block.
-The programm appends the boot signature 0x55 0xAA by itself at the end of sector 0.
+----Parameter information:
 
-QEMU standard: 1440 KB, 512-byte sector size,
+    The resulting file will always be called disk.img.
+    The bootstage0 file needs to be at least 448 Bytes big. If its bigger,
+    The values of the Bytes 448 to 512 will be lost, due to the placement of the Bios Parameter Block.
+    The programm appends the boot signature 0x55 0xAA by itself at the end of sector 0.
 
- - 80 cylinders (0 to 79)
- - 2 heads (0 to 1)
- - 18 sectors per track on one head (1 to 18)
-    -> 36 sectors per cylinder distributed across two heads (seen in 3D).
-    -> One ring therefore has 18 sectors, there are 80 rings, and there are two such platters.
+----QEMU standard / Hadware: 
+    1440 KB, 512-byte sector size,
+
+    - 80 cylinders (0 to 79)
+    - 2 heads (0 to 1)
+    - 18 sectors per track on one head (1 to 18)
+        -> 36 sectors per cylinder distributed across two heads (seen in 3D).
+        -> One ring therefore has 18 sectors, there are 80 rings, and there are two such platters.
+
+
+----Partition information:
+
+    One Dir can contain 16 Files / Dirs.
+    max Filename:   8 Byte
+    max File-end:   3 Byte
+
+    IMPORTANT:
+        1. This program writes the content of --bootstage0 into sector 0.
+        2. This program writes the content of --bootstage1 into the file /boot/bootst1      END = 'bin'
+        3. This program writes the contnent of --kernel into the file /kernel/kcode         END = 'bin'
+
 */
 
 
@@ -192,9 +208,15 @@ struct CLUSTER* GET_CLUSTER(char* PATH, char* END, char* filename) // hier noch 
 {
     /*
     This functions accepts a path, which contains the filename without the end, the file-ending and the filename.
-    It returns      
+    
+    A little Trick:
+    If u wanna get the content of the parent directory of a existing file, use the directory entry "   ".
+    For example : PATH = '/boot/test/file1' with END = 'bin' , filename = 'file1'.
+    Simply use GET_CLUSTER(PATH, "   ", filename) to get the cluster of the directory test.
     */
 
+
+    // get the dirname and root dir entry
     char dirname[8];
     memset(dirname, ' ', 8);
     
@@ -205,12 +227,12 @@ struct CLUSTER* GET_CLUSTER(char* PATH, char* END, char* filename) // hier noch 
 
     memcpy(dirname, last_slash + 1, current_slash  - (last_slash + 1));
     
-   
     struct DIR_ENTRY* entry = GET_ROOT_DIR_ENTRY(dirname);      
     struct CLUSTER* cluster = NULL;
 
     while(entry != NULL)
     {
+        // loop through the path
         last_slash = current_slash;
         current_slash += 1;
         for(current_slash; *current_slash != '/' && *current_slash; current_slash++)
@@ -218,11 +240,14 @@ struct CLUSTER* GET_CLUSTER(char* PATH, char* END, char* filename) // hier noch 
         memset(dirname, ' ', 8);
         memcpy(dirname, last_slash + 1, current_slash  - (last_slash + 1));
 
+        // check if the cluster contains the current dirname
         cluster = &__DATA.CLUSTERS[entry->FIRST_CLUSTER];
         entry = GET_DIR_ENTRY(dirname, END, cluster);
     }
+    // When theres no entry, stop the loop and check if our current dirname is equal to our filename
+    // if yes -> we got the right cluster
 
-    if(cluster == NULL)
+    if(cluster == NULL)         // only happens when the initial value of entry is NULL (GET_ROOT_DIR_ENTRY(dirname))
         return NULL;
 
     return (memcmp(dirname, filename, 8) == 0) ? cluster : NULL;
@@ -231,14 +256,15 @@ struct CLUSTER* GET_CLUSTER(char* PATH, char* END, char* filename) // hier noch 
 
 void SET_NEW_DIR_ENTRY(struct DIR_ENTRY* new_entry, struct CLUSTER* cluster)
 {
-    //printf("--- \n");
+    /*
+    Write a new dir entry into a cluster
+    */
     uint8_t zeros[DIR_ENTRY_SIZE ];
     memset(zeros, 0, DIR_ENTRY_SIZE );
     for(int i = 0; i < CLUSTER_SIZE ; i += DIR_ENTRY_SIZE )
     {
         if(memcmp(&cluster->bytes[i], &zeros, DIR_ENTRY_SIZE) == 0)     
         {
-            //printf("%d \n",i);
             memcpy(&cluster->bytes[i], new_entry, DIR_ENTRY_SIZE);
             break;
         }
@@ -248,6 +274,9 @@ void SET_NEW_DIR_ENTRY(struct DIR_ENTRY* new_entry, struct CLUSTER* cluster)
 // ---------------------- HELPING FUNCTIONS ------------------------------
 char* GET_FILENAME(char* PATH)
 {
+    /*
+    Returns the filename of a Path (last file).
+    */
     char* dirname = malloc(8 * sizeof(char));
     memset(dirname, ' ', 8);
 
@@ -266,6 +295,9 @@ char* GET_FILENAME(char* PATH)
 
 char* GET_ROOT_DIR_NAME(char* PATH)
 {
+    /*
+    Returns the first dirname of a Path.
+    */
     char* dirname = malloc(8 * sizeof(char));
     memset(dirname, ' ', 8);
 
@@ -285,7 +317,9 @@ char* GET_ROOT_DIR_NAME(char* PATH)
 
 void MKROOTDIR(char* NAME)
 {   
-
+    /*
+    Creates a root directory. We need this function, because FAT has a special root dir structure.
+    */
     NAME++;
     SET_FAT_ENTRY(FAT_CLUSTER_OFFSET,  0x0FFF);
 
@@ -324,15 +358,23 @@ void MKROOTDIR(char* NAME)
 void MKDIR(char* PATH)
 {
 
+    /*
+    Creates any directory for any existing path. This function also uses MKROOTDIR.
+    Valid Inputs : '/boot' , '/boot/test1'  ,'/b'
+    */
+
+
+    // Get filename, root dir name
     char* filename = GET_FILENAME(PATH);
     char* root_dir_name = GET_ROOT_DIR_NAME(PATH);
     if(memcmp(filename, root_dir_name, 8) == 0)
     {
+        // if theyre equal, then the user wants to create a root dir
         MKROOTDIR(PATH);
         return;
     }
 
-
+    // Get the cluster of the last directory, using "   ", for a existing file-ending instead of the current file ending.
     struct CLUSTER* cluster = GET_CLUSTER(PATH, "   ", filename);
     if(cluster == NULL)
     {
@@ -367,6 +409,11 @@ void MKDIR(char* PATH)
 
 void MKFILE(char* PATH, char* END, size_t size)
 {
+    /*
+    Create a non dir file of 'size' in Bytes.
+    The other directory inside PATH need to exist.   
+    */
+
 
     size_t sectors = size / 512;  
     if(size % 512 > 0)
@@ -380,7 +427,7 @@ void MKFILE(char* PATH, char* END, size_t size)
     for(int j = 0; *(END + j); j++)
         end[j] =  *(END + j);
 
-
+    // Get parent dir
     struct CLUSTER* cluster = GET_CLUSTER(PATH, "   ", filename);
     
     struct DIR_ENTRY new_entry = {
@@ -401,6 +448,7 @@ void MKFILE(char* PATH, char* END, size_t size)
 
     SET_NEW_DIR_ENTRY(&new_entry, cluster);
 
+    // reserve Space with the FAT
     for(int i = 0; i < sectors-1; i++)
     {
         SET_FAT_ENTRY(FAT_CLUSTER_OFFSET,  FAT_CLUSTER_OFFSET + 1);
@@ -414,23 +462,27 @@ void MKFILE(char* PATH, char* END, size_t size)
 
 void WFILE(char* PATH, char* END, char* stream, size_t stream_size)
 {   
-
+    /*
+    Write an stram of 'stream_size' at offset 0 into the file at PATH.
+    */
     char* filename = GET_FILENAME(PATH);
     char* root_dir_name = GET_ROOT_DIR_NAME(PATH);
     
-    
+    // translate END into a string of size 3. "pd" -> "pd "
     char end[3];
     memset(end, ' ', 3);
     for(int j = 0; *(END + j); j++)
         end[j] =  *(END + j);
 
-    
+
+    // get data
     struct CLUSTER* cluster = GET_CLUSTER(PATH, "   ", filename);
     struct DIR_ENTRY* entry = GET_DIR_ENTRY(filename, end, cluster);
     
 
     uint16_t cluster_offset = entry->FIRST_CLUSTER;
 
+    // copy values into a buffer the size of sector and write to that sector.
     char buffer[512];
     ssize_t left2write = stream_size; 
 
@@ -445,7 +497,8 @@ void WFILE(char* PATH, char* END, char* stream, size_t stream_size)
         
         memcpy(&__DATA.CLUSTERS[cluster_offset], buffer, buffer_size);
 
-        cluster_offset = GET_FAT_ENTRY(cluster_offset); 
+        // Jump to the next entry. We cant use clusteroffset++ dueo to fragmentation.
+        cluster_offset = GET_FAT_ENTRY(cluster_offset);         
     }
 
 }
@@ -453,6 +506,9 @@ void WFILE(char* PATH, char* END, char* stream, size_t stream_size)
 void WRITE_IMG()
 {
 
+    /*
+    Write all structures into our finished img.
+    */
     file_pwrite_struct(img, &__BOOTSECTOR, sizeof(__BOOTSECTOR), offset);
     offset += sizeof(__BOOTSECTOR);
 
@@ -472,6 +528,9 @@ void WRITE_IMG()
 
 void main(int argc, char *argv[])
 {
+    /*
+    argv implemenation.
+    */
     char *boot0_path = NULL;
     char *boot1_path = NULL;
     char *kernel_path = NULL;
@@ -494,12 +553,14 @@ void main(int argc, char *argv[])
         }
     }
 
+    // If one parameter doesnt exist -> terminate
     if(boot0_path == NULL || boot1_path == NULL || kernel_path == NULL)
     {
         printf("Wrong Input.");
         exit(1);
     }
 
+    // Create the basic layout as described above.
     struct BOOTSECTOR __BOOTSECTOR;
     __FAT = (struct FAT){0};
     __ROOT_DIRECTORY = (struct ROOT_DIRECTORY) {0};
