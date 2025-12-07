@@ -1,6 +1,9 @@
 #include "fat12_substructs.h"
 
 
+
+
+
 // --------------------- SEKTOR 0 --------------------------
 
 struct BOOTSECTOR
