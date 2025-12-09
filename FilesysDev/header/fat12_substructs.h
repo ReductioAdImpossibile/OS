@@ -8,7 +8,9 @@
 #include <string.h>
 
 
-// --------------------------------------------------------------------------------------------------------------
+/*
+This file definies substructures, which are used for definitions of the structures in fat12_structs.h
+*/
 
 // 62 Byte
 struct BIOS_PARAMETER_BLOCK 

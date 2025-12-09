@@ -1,3 +1,6 @@
+
+
+
 This program creates a FAT12 disk.img for a floppy disk following the QEMU standard.
 It allows the user to install it a boot0, boot1 and kernel binary.
 This is not a driver. Its a program to create a img, which a driver will be based upon.
@@ -5,6 +8,10 @@ This is not a driver. Its a program to create a img, which a driver will be base
 ---------------------------------------------------------------------------------------------
 run with : ./mountfat12 --bootstage0 <file.bin> --bootstage1 <file.bin> --kernel <file.bin>
 ---------------------------------------------------------------------------------------------
+
+
+
+
 
 ----Parameter information:
 
