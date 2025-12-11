@@ -38,6 +38,6 @@ run with : ./mountfat12 --bootstage0 <file.bin> --bootstage1 <file.bin> --kernel
 
     IMPORTANT:
         1. This program writes the content of --bootstage0 into sector 0.
-        2. This program writes the content of --bootstage1 into the file /boot/bootst1      END = 'bin'
+        2. This program writes the content of --bootstage1 into the file /boot/stage1      END = 'bin'
         3. This program writes the contnent of --kernel into the file /kernel/kcode         END = 'bin'
 

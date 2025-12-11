@@ -1,45 +1,4 @@
 
-/*
-This program creates a FAT12 disk.img for a floppy disk following the QEMU standard.
-It allows the user to install it a boot0, boot1 and kernel binary.
-This is not a driver. Its a program to create a img, which a driver will be based upon.
-
----------------------------------------------------------------------------------------------
-run with : ./mountfat12 --bootstage0 <file.bin> --bootstage1 <file.bin> --kernel <file.bin>
----------------------------------------------------------------------------------------------
-
-----Parameter information:
-
-    The resulting file will always be called disk.img.
-    The bootstage0 file needs to be at least 448 Bytes big. If its bigger,
-    The values of the Bytes 448 to 512 will be lost, due to the placement of the Bios Parameter Block.
-    The programm appends the boot signature 0x55 0xAA by itself at the end of sector 0.
-
-----QEMU standard / Hadware: 
-    1440 KB, 512-byte sector size,
-
-    - 80 cylinders (0 to 79)
-    - 2 heads (0 to 1)
-    - 18 sectors per track on one head (1 to 18)
-        -> 36 sectors per cylinder distributed across two heads (seen in 3D).
-        -> One ring therefore has 18 sectors, there are 80 rings, and there are two such platters.
-
-
-----Partition information:
-
-    One Dir can contain 16 Files / Dirs.
-    max Filename:   8 Byte
-    max File-end:   3 Byte
-
-    IMPORTANT:
-        1. This program writes the content of --bootstage0 into sector 0.
-        2. This program writes the content of --bootstage1 into the file /boot/bootst1      END = 'bin'
-        3. This program writes the contnent of --kernel into the file /kernel/kcode         END = 'bin'
-
-*/
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -78,7 +37,7 @@ void CREATE_IMG()
     /*
     We create a .img out of zeros with the given size.
     */
-    img = file_create("disk.img");
+    img = file_create(IMGNAME);
     size_t buffer_size = 1024;
     uint8_t* buffer = calloc(1, 1024);
 
@@ -551,6 +510,11 @@ void main(int argc, char *argv[])
             if (i + 1 < argc) 
                 kernel_path = argv[++i];
         }
+        else if (strcmp(argv[i], "--location") == 0)
+        {
+            if (i + 1 < argc) 
+                IMGNAME = argv[++i];
+        }
     }
 
     // If one parameter doesnt exist -> terminate
@@ -575,11 +539,12 @@ void main(int argc, char *argv[])
 
 
     file* boot1_file = file_init(boot1_path);
+    
     size_t boot1_size = file_size(boot1_file);
-    MKFILE("/boot/bootst1", "bin", boot1_size);
+    MKFILE("/boot/stage1", "bin", 10 * 512);           // Always 10 sectors, for the stage 0 bootloader.
         
     char* buffer_b1 = file_pread_buffer(boot1_file, boot1_size, 0);
-    WFILE("/boot/bootst1", "bin", buffer_b1, boot1_size);
+    WFILE("/boot/stage1", "bin", buffer_b1, boot1_size);
 
 
 
