@@ -8,7 +8,7 @@ It definies the basic structure of the implementet fileystem.
 
 
 
-// --------------------- SEKCTOR 0 --------------------------
+// --------------------- SEKCTOR 1 --------------------------
 
 struct BOOTSECTOR
 {
@@ -18,7 +18,7 @@ struct BOOTSECTOR
 }__attribute__((packed));
 
 
-//  --------------------- SECTOR 1 to inc. 18 --------------------------
+//  --------------------- SECTOR 2 to inc. 19 --------------------------
 
 /*
 The Filesystem contains two FATS, with 9 Sectors each.
@@ -56,7 +56,7 @@ struct FAT
 
 }__attribute__((packed));
 
-//  --------------------- SECTOR 19 to incl. 32 --------------------------
+//  --------------------- SECTOR 20 to incl. 33 --------------------------
 // Each entry corresponds to a file and must be located in the root directory.
 // The root directory is 14 sectors by default. Therefore, there are 512 * 14 / 32 = 224 entries or files in this system.
 // With 2847 data clusters, this equates to approximately 12 clusters per file, or about 6.5 KB.
@@ -67,7 +67,7 @@ struct ROOT_DIRECTORY
 
 
 
-//  ---------------------SECTOR  33 to incl. 2880 --------------------------
+//  ---------------------SECTOR  34 to incl. 2880 --------------------------
 // => 2847 Cluster / Sectors
 struct DATA
 {
