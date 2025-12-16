@@ -11,8 +11,8 @@ mov sp , bp
 call load_next_stage
 jmp $
 
-%include "bootloader/stage0/print_rm.asm"
-%include "bootloader/stage0/disk.asm"
+%include "stage0/print_rm.asm"
+%include "stage0/disk.asm"
 
 [BITS 16]
 load_next_stage:
@@ -24,7 +24,6 @@ load_next_stage:
     call print_string_rm
 
     jmp 0x100:0x0000
-
 
 BOOT_DRIVE:
     db 0

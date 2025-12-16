@@ -30,12 +30,20 @@ NASM_FLAGS_ELF := -f elf32
 GCC_FLAGS := -fno-pie -m32 -ffreestanding -c
 LD_FLAGS := -m elf_i386 -Ttext 0x1000 --oformat binary
 
-create:
+
+
+
+
+exports:
+	export PATH=/usr/bin/watcom/binl64:$PATH
+
+dirs:
 	mkdir -p $(BIN_DIR)
 	mkdir -p $(OBJ_DIR)
-	$(NASM) $(NASM_FLAGS_BIN) $(BOOT0) -o $(BOOT0_BIN)
-	$(NASM) $(NASM_FLAGS_BIN) $(BOOT1) -o $(BOOT1_BIN)
 
+create: exports dirs
+
+	$(MAKE) -C bootloader
 	$(MOUNT) --bootstage0 $(BOOT0_BIN) --bootstage1 $(BOOT1_BIN) --kernel $(BOOT0_BIN) --location $(BIN_DIR)/disk.img
 	
 all: create
@@ -43,8 +51,6 @@ all: create
 
 debug: create
 	$(QEMU) -fda $(OS_IMAGE) -monitor stdio
-
-
 
 
 img:

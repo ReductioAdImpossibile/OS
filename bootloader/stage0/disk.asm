@@ -41,9 +41,3 @@ disk_load:
 DISK_ERROR_MSG:
     db "DISK ERROR. ", 0
 
-
-
-
-
-
-

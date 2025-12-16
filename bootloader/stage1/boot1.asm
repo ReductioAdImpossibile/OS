@@ -1,15 +1,13 @@
 [org  0x1000]
 
-%include "bootloader/stage1/print_rm.asm"
 
+mov ax, MSG_STAGE1
+call print_string_rm
 
-mov ah, 0x0e
-mov al, "x"
-int 0x10
+jmp $
 
 MSG_STAGE1:
-    db "STAGE1",0
+    db "stage 1 loaded !",0
 
 
-
-
+%include "stage0/print_rm.asm"
