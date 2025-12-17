@@ -11,8 +11,8 @@ mov sp , bp
 call load_next_stage
 jmp $
 
-%include "stage0/print_rm.asm"
-%include "stage0/disk.asm"
+%include "print_rm.asm"
+%include "disk.asm"
 
 [BITS 16]
 load_next_stage:

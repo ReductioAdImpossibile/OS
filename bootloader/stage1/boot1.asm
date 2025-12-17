@@ -10,4 +10,4 @@ MSG_STAGE1:
     db "stage 1 loaded !",0
 
 
-%include "stage0/print_rm.asm"
+%include "../stage0/print_rm.asm"
