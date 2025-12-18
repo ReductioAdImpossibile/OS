@@ -2,7 +2,7 @@
 ; This program function loads /boot/bootst1 out of our FAT filesystem into the RAM.
 ; In this OS the file bootst1 is special, because it always has the size of 10 sectors and is placed at sector 38.
 ; This due to my implementation of the disk img.
-; I really dont wanna write a disk driver in assembly. Im sorry.
+; I really dont wanna write a disk driver in assembly. 
 
 ; To get a variable file size, its necessary to read the FAT at the third entry.
 
@@ -10,11 +10,6 @@
 disk_load:
 
     pusha 
-
-    mov ax, 0x100
-    mov es, ax
-    xor bx, bx
-
     mov ah , 0x02   ; BIOS read sector function
     mov al , 10     ; read 10 sectors
 

@@ -1,13 +1,22 @@
-[org  0x1000]
+[Bits 16]
+
+section _ENTRY class=CODE
+extern _cstart
+global entry
+
+entry:
+    cli
+    mov ax, ds
+    mov ss, ax
+    mov sp, 0
+    mov bp,sp
+    sti
+
+    xor dh, dh
+    push dx
+    call _cstart
+
+    cli
+    hlt
 
 
-mov ax, MSG_STAGE1
-call print_string_rm
-
-jmp $
-
-MSG_STAGE1:
-    db "stage 1 loaded !",0
-
-
-%include "../stage0/print_rm.asm"
