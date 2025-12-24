@@ -10,6 +10,7 @@ entry:
     mov ss, ax
     mov sp, 0
     mov bp,sp
+
     sti
 
     xor dh, dh
@@ -18,5 +19,3 @@ entry:
 
     cli
     hlt
-
-

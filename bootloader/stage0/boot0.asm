@@ -1,4 +1,5 @@
 
+; Due to the extended bios parameter block at the start of our file system we need to shift by 0x7c00 (start of bootloader) + 62 (bios parameter block) 
 [org 0x7C3E]            ; So we need to use this instead! (+62)
 
 STAGE1_OFFSET equ 0x7E00 

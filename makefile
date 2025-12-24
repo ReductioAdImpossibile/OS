@@ -40,5 +40,12 @@ all: create
 debug: create
 	$(QEMU) -fda $(OS_IMAGE) -monitor stdio
 
+
+
+disasm_stage1:
+	ndisasm -b 16 $(BIN_DIR)/stage1.bin > $(BIN_DIR)/debug/stage1.asm
+	
 img:
 	$(GCC) -o mountfat12 imgwriter/src/mountfat12.c imgwriter/src/file.c  
+
+

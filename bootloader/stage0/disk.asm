@@ -18,6 +18,7 @@ disk_load:
     mov dh , 0   ; head 
     mov cl , 2   ; sector
     
+
     int 0x13
 
     jc disk_error   
@@ -25,6 +26,7 @@ disk_load:
     cmp al , 10
     jne disk_error 
 
+        
     popa
     ret 
 

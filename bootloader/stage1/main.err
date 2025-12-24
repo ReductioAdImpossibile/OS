@@ -1,2 +1,2 @@
-main.c(3): Warning! W303: Parameter 'bootdrive' has been defined, but not referenced
-main.c(6): Warning! W138: No newline at end of file
+stdio.h(17): Warning! W138: No newline at end of file
+main.c(5): Warning! W303: Parameter 'bootdrive' has been defined, but not referenced
